@@ -3,6 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import random
+import os
 from scipy import signal
 import numpy as np
 from keras import metrics
@@ -69,6 +70,7 @@ def roll(array, window_size,freq):
     rolled = np.lib.stride_tricks.as_strided(array, shape=shape, strides=strides)
     return rolled[np.arange(0,shape[0],freq)]
 
+##### CNN #########################################################
 model = Sequential()
 model.add(keras.Input(shape=(224, 1)))
 
@@ -104,7 +106,10 @@ model.add(keras.layers.Dense(32,activation=keras.layers.LeakyReLU(alpha=0.1)))
 model.add(BatchNormalization())
 #model.add(keras.layers.Dense(1,  activation = 'relu'))
 model.add(keras.layers.Dense(1,  activation = 'sigmoid'))
+##########################################################
 
+directory = os.getcwd()
+print(directory)
 
 Dmax=20000     # distance to target, m
 c=299792458     # speed of light, m/s
@@ -137,9 +142,9 @@ Nsample_shift=224   # spectrum window, shift 336
 Nsample1_f=2048     # number of reports in frequency spectrum
 
 mean = 0
-std = 1.0/0.9
+standardDeviation = 1.0/1  # noise level control
 num_samples = len(t)
-samples = np.random.normal(mean, std, size=num_samples) + rectangularPulse
+samples = np.random.normal(mean, standardDeviation, size=num_samples) + rectangularPulse
 
 #Rolling window
 a=roll(t,Nsample_width, Nsample_shift)
@@ -164,7 +169,7 @@ print('index_sigm=',index_sigm)
 index_w1=int(0.95e7/deltaF); index_w2=int(1.05e7/deltaF)
 index_w12=int(0.47e7/deltaF); index_w22=int(1.5234e7/deltaF)
 
-model.load_weights('c:/rls_train.h5')
+model.load_weights(directory+'/cnn_train.h5')
 for i in range(len(a)):
     print(i)
     xx0,yy0 = FT_approx(b[i],a[i],Nsample1_f)
@@ -180,8 +185,6 @@ for i in range(len(a)):
     cnn[i]=cnn0
     count[i]=i
     
-#C:\python\rls_train
-
 print('A_noise=', np.mean(m_y))
 print('index_w1=',index_w1,' index_w2=',index_w2)
 print('index_w12=',index_w12,' index_w22=',index_w22)
@@ -234,44 +237,3 @@ plt.title(r'signal recognition by a neural network (probability)', fontsize=10)
 plt.xlabel(r'Signal detector channel number (Range detection channel)')
 plt.ylabel(r'Probability of finding the signal')
 plt.tight_layout()
-
-#plt.subplot(5,1,5)
-#plt.plot(xx,abs(yy))
-#plt.xlim([0,max(xx)])
-#plt.xticks(np.arange(0, max(xx), step=0.15e9), fontsize=9, rotation=0)
-#plt.yticks(fontsize=9, rotation=0)
-#plt.grid()
-#plt.title(r'Spectra Signal with noise', fontsize=7);
-
-#fig2=plt.figure(figsize=(11,11))
-#plt.subplot(2,1,1)
-#plt.imshow(abs(yy1), cmap='jet')
-#plt.subplot(2,1,2)
-#plt.plot(xx1[index_a],abs(yy1[index_a]))
-#plt.xlim([0,max(xx)])
-#plt.grid()
-#plt.yticks(fontsize=9, rotation=0)
-'''
-fig3=plt.figure(figsize=(11,11))
-plt.subplot(2,1,1)
-for i in range(len(yy1)):
-    plt.plot(xx1[i],abs(yy1[i]))
-    #plt.xlim([0,max(xx1[i])])
-plt.xlim([0,2*sigm])    
-plt.grid()
-plt.yticks(fontsize=9, rotation=0)
-
-plt.subplot(2,1,2)
-plt.plot(xx1[index_a],abs(zz1[index_a]),xx1[index_a],abs(yy1[index_a])) 
-#plt.plot(xx1[index_a],abs(yy1[index_a])) 
-#plt.xlim([0,2*sigm])
-plt.xlim([0.75e7,1.25e7])
-plt.grid()
-plt.yticks(fontsize=9, rotation=0)
-
-fig4=plt.figure(figsize=(11,11))
-plt.subplot(2,1,1)
-plt.plot(xn,cumSig, xn, cumNoise)
-plt.grid()
-plt.yticks(fontsize=9, rotation=0)
-'''
